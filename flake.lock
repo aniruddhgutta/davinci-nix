@@ -1,0 +1,61 @@
+{
+  "nodes": {
+    "mesa-davinci": {
+      "locked": {
+        "lastModified": 1754501210,
+        "narHash": "sha256-ahTHrGs72TLVcNUR2VHckEx+t6frke0e/Ptk6AaEINk=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "599ddd2b79331c1e6153e1659bdaab65d62c4c82",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "599ddd2b79331c1e6153e1659bdaab65d62c4c82",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1770841267,
+        "narHash": "sha256-9xejG0KoqsoKEGp2kVbXRlEYtFFcDTHjidiuX8hGO44=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ec7c70d12ce2fc37cb92aff673dcdca89d187bae",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "ec7c70d12ce2fc37cb92aff673dcdca89d187bae",
+        "type": "github"
+      }
+    },
+    "nixpkgs-pinned": {
+      "locked": {
+        "lastModified": 1760578826,
+        "narHash": "sha256-xOV1r5omtsfyPqlgxgDDuO0szHuj9BBTbaTQHgF+CAY=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "497ee3c70707fd71b45c37d48ae1d45e79751047",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "497ee3c70707fd71b45c37d48ae1d45e79751047",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "mesa-davinci": "mesa-davinci",
+        "nixpkgs": "nixpkgs",
+        "nixpkgs-pinned": "nixpkgs-pinned"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}

@@ -2,14 +2,14 @@
   description = "A flake for DaVinci Resolve Studio with FFmpeg encoder plugin and patches";
 
   inputs = {
-    # Main nixpkgs input
-    nixpkgs.url = "github:NixOS/nixpkgs/ec7c70d12ce2fc37cb92aff673dcdca89d187bae";
+    # Main nixpkgs input (NixOS 26.05)
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
-    # Pinned nixpkgs input for DaVinci Resolve Studio
-    nixpkgs-pinned.url = "github:NixOS/nixpkgs/497ee3c70707fd71b45c37d48ae1d45e79751047";
+    # Pinned nixpkgs input exclusively for the raw DaVinci Resolve Studio binary
+    nixpkgs-pinned.url = "github:NixOS/nixpkgs/e4ec59bc1152b09a4843702e4a49381194f065a2";
 
     # Custom mesa input
-    mesa-davinci.url = "github:nixos/nixpkgs?ref=599ddd2b79331c1e6153e1659bdaab65d62c4c82";
+    # mesa-davinci.url = "github:nixos/nixpkgs?ref=599ddd2b79331c1e6153e1659bdaab65d62c4c82";
   };
 
   outputs =
@@ -17,27 +17,28 @@
       self,
       nixpkgs,
       nixpkgs-pinned,
-      mesa-davinci,
+      # mesa-davinci,
       ...
     }@inputs:
     let
       system = "x86_64-linux";
       lib = nixpkgs.lib;
 
-      # Import main pkgs with unfree allowed
+      # Import main pkgs (NixOS 26.05)
       pkgs = import nixpkgs {
         inherit system;
         config.allowUnfree = true;
       };
 
-      # Import pinned pkgs with unfree allowed
+      # Import pinned pkgs (Used *only* to fetch the unpatched binary)
       pkgs-pinned = import nixpkgs-pinned {
         inherit system;
         config.allowUnfree = true;
       };
 
-      mesa-good-pkg = mesa-davinci.legacyPackages.${system}.mesa;
+      # mesa-good-pkg = mesa-davinci.legacyPackages.${system}.mesa;
 
+      # Built using NixOS 26.05
       ffmpeg-encoder-plugin = pkgs.stdenv.mkDerivation (finalAttrs: {
         pname = "ffmpeg-encoder-plugin";
         version = "1.2.1";
@@ -62,11 +63,13 @@
         let
           davinci-patched =
             let
+              # ONLY this specific line touches the pinned repository
               davinci-locked = pkgs-pinned.davinci-resolve-studio;
             in
             davinci-locked.davinci.overrideAttrs (old: {
               postInstall = ''
                 ${old.postInstall or ""}
+                # Patched using 26.05 perl tools
                 ${lib.getExe pkgs.perl} -pi -e 's/\x74\x11\xe8\x21\x23\x00\x00/\xeb\x11\xe8\x21\x23\x00\x00/g' $out/bin/resolve
                 ${lib.getExe pkgs.perl} -pi -e 's/\x03\x00\x89\x45\xFC\x83\x7D\xFC\x00\x74\x11\x48\x8B\x45\xC8\x8B/\x03\x00\x89\x45\xFC\x83\x7D\xFC\x00\xEB\x11\x48\x8B\x45\xC8\x8B/' $out/bin/resolve
                 ${lib.getExe pkgs.perl} -pi -e 's/\x74\x11\x48\x8B\x45\xC8\x8B\x55\xFC\x89\x50\x58\xB8\x00\x00\x00/\xEB\x11\x48\x8B\x45\xC8\x8B\x55\xFC\x89\x50\x58\xB8\x00\x00\x00/' $out/bin/resolve
@@ -80,12 +83,13 @@
               '';
             });
         in
+        # Sandbox framework evaluated entirely against NixOS 26.05
         pkgs.buildFHSEnv {
           inherit (davinci-patched) pname version;
 
           targetPkgs =
-            pkgs:
-            with pkgs;
+            inner-pkgs:
+            with inner-pkgs;
             [
               alsa-lib
               aprutil
@@ -111,21 +115,21 @@
               python3.pkgs.numpy
               udev
               xdg-utils
-              libICE
-              libSM
-              libX11
-              libXcomposite
-              libXcursor
-              libXdamage
-              libXext
-              libXfixes
-              libXi
-              libXinerama
-              libXrandr
-              libXrender
-              libXt
-              libXtst
-              libXxf86vm
+              libice
+              libsm
+              libx11
+              libxcomposite
+              libxcursor
+              libxdamage
+              libxext
+              libxfixes
+              libxi
+              libxinerama
+              libxrandr
+              libxrender
+              libxt
+              libxtst
+              libxxf86vm
               libxcb
               xcbutil
               xcbutilimage
@@ -135,9 +139,10 @@
               xkeyboardconfig
               zlib
               rocmPackages.clr.icd
+              mesa
             ]
             ++ [
-              mesa-good-pkg
+              # mesa-good-pkg
               davinci-patched
             ];
 
@@ -146,12 +151,14 @@
           '';
 
           extraBwrapArgs = [
-            ''--bind "$HOME"/.local/share/DaVinciResolve/Extras ${davinci-patched}/Extras''
-            # "--dir"
-            # "/opt/resolve/IOPlugins"
-            # "--ro-bind"
-            # "${ffmpeg-encoder-plugin}"
-            # "/opt/resolve/IOPlugins/ffmpeg_encoder_plugin.dvcp.bundle"
+            # 1. Mount the Extras folder cleanly to the user's home directory
+            ''--bind "$HOME"/.local/share/DaVinciResolve/Extras /Extras''
+
+            # 2. Let bubblewrap safely create the required bundle subdirectory inside the existing structure
+            "--dir /IOPlugins/ffmpeg_encoder_plugin.dvcp.bundle/Contents/Linux-x86-64"
+
+            # 3. Mount the built plugin file directly into its bundle location
+            "--ro-bind ${ffmpeg-encoder-plugin}/ffmpeg_encoder_plugin.dvcp /IOPlugins/ffmpeg_encoder_plugin.dvcp.bundle/Contents/Linux-x86-64/ffmpeg_encoder_plugin.dvcp"
           ];
 
           runScript = "${lib.getExe pkgs.bash} ${pkgs.writeText "davinci-wrapper" ''

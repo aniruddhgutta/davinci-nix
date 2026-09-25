@@ -69,8 +69,19 @@
       # Make Davinci use the generic alsa device so it doesn't hang when there isn't one available
       davinciAlsaConfig = pkgs.writeText "davinci-alsa.conf" ''
         pcm.!default {
-          type plug
-          slave.pcm "hw:CARD=Generic,DEV=0"
+          type asym
+          playback.pcm {
+            type pulse
+            device "alsa_output.pci-0000_0b_00.4.analog-stereo"
+          }
+          capture.pcm {
+            type pulse
+            device "alsa_input.pci-0000_0b_00.4.analog-stereo"
+          }
+        }
+
+        ctl.!default {
+          type pulse
         }
       '';
     in
@@ -81,6 +92,7 @@
           with inner-pkgs;
             [
               alsa-lib
+              alsa-plugins
               aprutil
               bzip2
               dbus

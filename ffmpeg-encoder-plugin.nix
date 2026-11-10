@@ -8,13 +8,13 @@
 
 stdenv.mkDerivation (finalAttrs: {
   pname = "ffmpeg-encoder-plugin";
-  version = "1.2.1";
+  version = "1.4.0";
 
   src = fetchFromGitHub {
     owner = "EdvinNilsson";
     repo = "ffmpeg_encoder_plugin";
     rev = "v${finalAttrs.version}";
-    hash = "sha256-F4Q8YCXD5UldTwLbWK4nHacNPQ/B+4yLL96sq7xZurM=";
+    hash = "sha256-q37cA1GR2+qPzrJVrAN9uOqEmQ6ehPrmZWt+v4W94OE=";
   };
 
   nativeBuildInputs = [ cmake ];
